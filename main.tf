@@ -23,16 +23,16 @@ locals {
 }
 
 resource "aws_iam_role" "provisioning" {
-  name        = "rwx-provisioning-${var.label}"
+  name        = "rwx-provisioning-${var.rwx_self_hosted_runner_label}"
   description = "Allows RWX to provision and tear down self-hosted runners in this account."
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Effect    = "Allow"
-      Principal = { AWS = "arn:aws:iam::${var.rwx_account_id}:root" }
+      Principal = { AWS = "arn:aws:iam::${var.rwx_aws_account_id}:root" }
       Action    = ["sts:AssumeRole", "sts:TagSession"]
-      Condition = { StringEquals = { "sts:ExternalId" = var.external_id } }
+      Condition = { StringEquals = { "sts:ExternalId" = var.rwx_self_hosted_runner_external_id } }
     }]
   })
 
@@ -165,7 +165,7 @@ resource "aws_iam_role_policy" "provisioning" {
 }
 
 resource "aws_iam_role" "runner" {
-  name        = "rwx-runner-${var.label}"
+  name        = "rwx-runner-${var.rwx_self_hosted_runner_label}"
   description = "Identity that RWX self-hosted runner instances run as."
 
   assume_role_policy = jsonencode({
@@ -181,7 +181,7 @@ resource "aws_iam_role" "runner" {
 }
 
 resource "aws_iam_instance_profile" "runner" {
-  name = "rwx-runner-${var.label}"
+  name = "rwx-runner-${var.rwx_self_hosted_runner_label}"
   role = aws_iam_role.runner.name
 
   tags = local.tags
