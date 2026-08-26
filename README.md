@@ -34,11 +34,11 @@ module "rwx_runner" {
   source  = "rwx-cloud/runner/aws"
   version = "~> 1.0"
 
-  label              = "prod"
-  external_id        = "8f4c1d92a7b3e5604fa8c2d19e0b7635"
-  rwx_account_id     = "123456789012"
-  subnet_ids         = ["subnet-05f8a3c19d7e4b206"]
-  security_group_ids = ["sg-0c2e91b7a4f36d508"]
+  rwx_self_hosted_runner_label       = "prod"
+  rwx_self_hosted_runner_external_id = "8f4c1d92a7b3e5604fa8c2d19e0b7635"
+  rwx_aws_account_id                 = "123456789012"
+  subnet_ids                         = ["subnet-05f8a3c19d7e4b206"]
+  security_group_ids                 = ["sg-0c2e91b7a4f36d508"]
 }
 ```
 
@@ -110,9 +110,9 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_external_id"></a> [external\_id](#input\_external\_id) | External ID that RWX generates for this self-hosted runner configuration; look it up on cloud.rwx.com. RWX presents it when assuming the provisioning role, which pins the trust policy to a single runner and guards against the confused deputy problem (https://docs.aws.amazon.com/IAM/latest/UserGuide/confused-deputy.html). | `string` | n/a | yes |
-| <a name="input_label"></a> [label](#input\_label) | Label of the self-hosted runner configuration on cloud.rwx.com. Set `runner.self-hosted` to this value in an RWX run definition to route tasks to this runner configuration. Also determines the names of the IAM roles this module creates. | `string` | n/a | yes |
-| <a name="input_rwx_account_id"></a> [rwx\_account\_id](#input\_rwx\_account\_id) | RWX's AWS account ID, which the provisioning role's trust policy allows to assume it. Look it up on cloud.rwx.com. | `string` | n/a | yes |
+| <a name="input_rwx_aws_account_id"></a> [rwx\_aws\_account\_id](#input\_rwx\_aws\_account\_id) | RWX's AWS account ID, which the provisioning role's trust policy allows to assume it. Look it up on cloud.rwx.com. | `string` | n/a | yes |
+| <a name="input_rwx_self_hosted_runner_external_id"></a> [rwx\_self\_hosted\_runner\_external\_id](#input\_rwx\_self\_hosted\_runner\_external\_id) | External ID that RWX generates for this self-hosted runner configuration; look it up on cloud.rwx.com. RWX presents it when assuming the provisioning role, which pins the trust policy to a single runner and guards against the confused deputy problem (https://docs.aws.amazon.com/IAM/latest/UserGuide/confused-deputy.html). | `string` | n/a | yes |
+| <a name="input_rwx_self_hosted_runner_label"></a> [rwx\_self\_hosted\_runner\_label](#input\_rwx\_self\_hosted\_runner\_label) | Label of the self-hosted runner configuration on cloud.rwx.com. Set `runner.self-hosted` to this value in an RWX run definition to route tasks to this runner configuration. Also determines the names of the IAM roles this module creates. | `string` | n/a | yes |
 | <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | Security groups that RWX may attach to runner instances. The provisioning role is scoped to these security groups. | `list(string)` | n/a | yes |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | Subnets that RWX may launch runner instances into. The provisioning role is scoped to these subnets, so runners cannot be launched elsewhere in the account. | `list(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags applied to every resource this module creates. | `map(string)` | `{}` | no |
