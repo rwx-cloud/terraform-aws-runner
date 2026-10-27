@@ -14,8 +14,8 @@ network you already have, using the subnets and security groups you specify.
   security groups you pass in, to AMIs that RWX shares with your account, and to
   resources carrying the `rwx:managed` tag.
 - **Instance role** (`rwx-runner-<label>`) and matching instance profile — the
-  identity your runner instances run as. It starts with no permissions; attach
-  your own policies to grant builds access to your AWS resources.
+  identity your runner instances run as. It has no permissions. Tasks cannot
+  use it, because they cannot reach the instance metadata service.
 
 ## Usage
 
@@ -59,14 +59,50 @@ module "rwx_runner" {
 
 ### Granting your builds access to other AWS resources
 
-Attach policies to the instance role:
+Use OIDC. Tasks on self-hosted runners cannot reach the instance metadata
+service, so they cannot use the instance role.
+
+Instead, add an [OIDC token](https://www.rwx.com/docs/oidc-aws) to an RWX vault
+and create an IAM role that trusts it. Copy the subject from the token in the
+vault UI:
 
 ```hcl
-resource "aws_iam_role_policy_attachment" "runner_ecr" {
-  role       = module.rwx_runner.instance_role_name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+data "aws_iam_openid_connect_provider" "rwx" {
+  url = "https://cloud.rwx.com/mint"
+}
+
+data "aws_iam_policy_document" "builds_assume_role" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [data.aws_iam_openid_connect_provider.rwx.arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "cloud.rwx.com/mint:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "cloud.rwx.com/mint:sub"
+      values   = ["<subject from the vault UI>"]
+    }
+  }
+}
+
+resource "aws_iam_role" "builds" {
+  name               = "rwx-builds"
+  assume_role_policy = data.aws_iam_policy_document.builds_assume_role.json
 }
 ```
+
+Then assume the role from a task with the
+[`aws/assume-role`](https://www.rwx.com/docs/packages/aws/assume-role) package,
+as described in the [OIDC with AWS](https://www.rwx.com/docs/oidc-aws) guide.
 
 ## Upgrading
 
@@ -122,7 +158,7 @@ No modules.
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_instance_profile_arn"></a> [instance\_profile\_arn](#output\_instance\_profile\_arn) | ARN of the instance profile attached to runner instances. |
-| <a name="output_instance_role_arn"></a> [instance\_role\_arn](#output\_instance\_role\_arn) | ARN of the role that runner instances run as. Attach additional policies to it to grant your builds access to other AWS resources. |
+| <a name="output_instance_role_arn"></a> [instance\_role\_arn](#output\_instance\_role\_arn) | ARN of the role that runner instances run as. |
 | <a name="output_instance_role_name"></a> [instance\_role\_name](#output\_instance\_role\_name) | Name of the role that runner instances run as. |
 | <a name="output_provisioning_role_arn"></a> [provisioning\_role\_arn](#output\_provisioning\_role\_arn) | ARN of the role RWX assumes to manage runners in this account. |
 | <a name="output_provisioning_role_name"></a> [provisioning\_role\_name](#output\_provisioning\_role\_name) | Name of the role RWX assumes to manage runners in this account. |

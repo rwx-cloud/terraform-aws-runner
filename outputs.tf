@@ -9,7 +9,7 @@ output "provisioning_role_name" {
 }
 
 output "instance_role_arn" {
-  description = "ARN of the role that runner instances run as. Attach additional policies to it to grant your runners access to other AWS resources."
+  description = "ARN of the role that runner instances run as."
   value       = aws_iam_role.runner.arn
 }
 
